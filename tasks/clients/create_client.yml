@@ -20,7 +20,7 @@
 # - _keycloak_client.assign_client_role_to_service_account=...  # Whether to assign a client role to the service account of the Keycloak client
 
 - name: "Get Keycloak admin access token"
-  ansible.builtin.include_tasks: authentication/get_admin_access_token.yml
+  ansible.builtin.include_tasks: "{{ role_path }}/tasks/authentication/get_admin_access_token.yml"
 
 - name: "Create Keycloak client '{{ _keycloak_client.client_id }}'"
   ansible.builtin.uri:
@@ -48,7 +48,7 @@
   register: output_create_ssp_client
 
 - name: "Get Keycloak client '{{ _keycloak_client.client_id }}' by client ID"
-  ansible.builtin.include_tasks: clients/get_client_by_client_id.yml
+  ansible.builtin.include_tasks: "{{ role_path }}/tasks/clients/get_client_by_client_id.yml"
   vars:
     _keycloak_client_id: "{{ _keycloak_client.client_id }}"
 
@@ -102,13 +102,13 @@
 
 - name: "Assign client role 'realm-admin' to service account of client '{{ _keycloak_client.client_id }}'"
   when: _keycloak_client.assign_client_role_to_service_account | default(false)
-  ansible.builtin.include_tasks: "roles/assign_client_role_to_service_account"
+  ansible.builtin.include_tasks: "{{ role_path }}/tasks/roles/assign_client_role_to_service_account"
   vars:
     _client_id: "realm-management"
     _client_role_name: "realm-admin"
 
 - name: "Store config of Keycloak client '{{ _keycloak_client.client_id }}' in Consul"
   when: _keycloak_client_store_config_consul | default(true)
-  ansible.builtin.include_tasks: "clients/store_client_config_consul"
+  ansible.builtin.include_tasks: "{{ role_path }}/tasks/clients/store_client_config_consul"
   vars:
     client_id: "{{ _keycloak_client.client_id }}"

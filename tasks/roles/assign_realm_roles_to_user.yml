@@ -10,7 +10,7 @@
       - (_keycloak_user.username is defined) and (_keycloak_user.username|length > 0)     # Username of the user to which the realm roles should be assigned
 
 - name: "Assign realm roles to user '{{ _keycloak_user.username }}'"
-  include_tasks: roles/assign_realm_role_to_user.yml
+  ansible.builtin.include_tasks: "{{ role_path }}/tasks/roles/assign_realm_role_to_user.yml"
   vars:
     _username: "{{ _keycloak_user.username }}"
     _realm_role_name: "{{ item }}"
