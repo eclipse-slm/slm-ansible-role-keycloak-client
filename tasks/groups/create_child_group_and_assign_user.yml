@@ -20,14 +20,14 @@
       authorization: "Bearer {{ keycloak_access_token }}"
     status_code: 200
   register: output_get_parent_group
-- ansible.builtin.set_fact:
+
+- name: "Set fact for parent group ID"
+  ansible.builtin.set_fact:
     __keycloak_users_parent_group_id: "{{ output_get_parent_group.json[0].id }}"
 
 - block:
   - name: "Create child group '{{ _keycloak_child_group.name }}' under parent group '{{ _keycloak_parent_group_name }}'"
-    include_role:
-      name: "keycloak/client"
-      tasks_from: groups/create_child_group.yml
+    ansible.builtin.include_tasks: "{{ role_path }}/tasks/groups/create_child_group.yml"
     vars:
       _keycloak_access_token: "{{ keycloak_access_token }}"
       _keycloak_realm_name: "{{ ENV.KEYCLOAK.REALM }}"
@@ -35,6 +35,7 @@
       _keycloak_group:
         name: "{{ _keycloak_child_group.name }}"
         description: "_keycloak_child_group.description'"
+
   - name: "Get details of create child group '{{ _keycloak_child_group.name }}'"
     ansible.builtin.uri:
       url: "{{ keycloak.url.external }}/admin/realms/{{ ENV.KEYCLOAK.REALM }}/groups?search={{ _keycloak_child_group.name }}"
@@ -44,7 +45,9 @@
         authorization: "Bearer {{ keycloak_access_token }}"
       status_code: 200
     register: output_get_child_group
-  - ansible.builtin.set_fact:
+
+  - name: "Set fact for child group ID"
+    ansible.builtin.set_fact:
       __keycloak_child_group_id: "{{ (output_get_child_group.json[0].subGroups | selectattr('name', 'equalto', _keycloak_child_group.name) | list | first).id }}"
 
 - block:
@@ -58,8 +61,10 @@
       status_code: 200
     register: output_get_user
 
-  - ansible.builtin.set_fact:
+  - name: "Set fact for user ID"
+    ansible.builtin.set_fact:
       __user_id: "{{ output_get_user.json[0].id }}"
+
   - name: "Assign user '{{ _username }}' to group '{{ _keycloak_child_group.name }}'"
     ansible.builtin.uri:
       url: "{{ keycloak.url.external }}/admin/realms/{{ ENV.KEYCLOAK.REALM }}/users/{{ __user_id }}/groups/{{ __keycloak_child_group_id }}"
