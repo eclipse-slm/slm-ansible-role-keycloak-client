@@ -107,6 +107,10 @@
     _client_id: "realm-management"
     _client_role_name: "realm-admin"
 
+- name: "Debug output of Keycloak client '{{ _keycloak_client.client_id }}' creation"
+  ansible.builtin.debug:
+    var: _keycloak_client
+
 - name: "Store config of Keycloak client '{{ _keycloak_client.client_id }}' in Consul"
   when: _keycloak_client_store_config_consul | default(true)
   ansible.builtin.include_tasks: "{{ role_path }}/tasks/clients/store_client_config_consul.yml"
