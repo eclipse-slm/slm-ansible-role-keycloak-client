@@ -102,13 +102,13 @@
 
 - name: "Assign client role 'realm-admin' to service account of client '{{ _keycloak_client.client_id }}'"
   when: _keycloak_client.assign_client_role_to_service_account | default(false)
-  ansible.builtin.include_tasks: "client/assign_client_role_to_service_account"
+  ansible.builtin.include_tasks: "roles/assign_client_role_to_service_account"
   vars:
     _client_id: "realm-management"
     _client_role_name: "realm-admin"
 
 - name: "Store config of Keycloak client '{{ _keycloak_client.client_id }}' in Consul"
   when: _keycloak_client_store_config_consul | default(true)
-  ansible.builtin.include_tasks: "client/store_client_config_consul"
+  ansible.builtin.include_tasks: "clients/store_client_config_consul"
   vars:
     client_id: "{{ _keycloak_client.client_id }}"
