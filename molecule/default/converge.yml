@@ -1,0 +1,58 @@
+---
+# Purpose: bring the instance to the desired state by running the role under test.
+# Molecule calls this playbook with `molecule converge`.
+- name: Converge
+  hosts: localhost
+  connection: local
+  gather_facts: false # Disable if your role does not rely on facts
+  vars:
+    keycloak:
+      url:
+        external: "http://localhost:8080"
+    ENV:
+      KEYCLOAK:
+        ADMIN_USERNAME: "admin" 
+        ADMIN_PASSWORD: "admin"
+    realm:
+      name: "test-realm"
+      display_name: "Test Realm"
+      enabled: true
+    realm_role:
+      name: "test-role"
+    realm_group:
+      name: "test-group"
+    realm_client:
+      client_id: "test-client"
+      public_client: false
+      service_accounts_enabled: true
+      # enabled: true
+      # protocol: "openid-connect"
+      # direct_access_grants_enabled: true
+      # protocol_mappers:
+      #   groups: true
+      #   audience: true
+      # assign_client_role_to_service_account: true
+  tasks:
+    # TEST ADMIN TOKEN:
+    - name: "Test Get Keycloak admin access token"
+      ansible.builtin.include_tasks: ./tasks/test_admin_token.yml
+
+    - name: Set Keycloak access token
+      ansible.builtin.set_fact:
+        _keycloak_access_token: "{{ keycloak_access_token }}"
+
+    # TEST REALM:
+    - name: "Test Create Keycloak realm"
+      ansible.builtin.include_tasks: ./tasks/test_realm.yml
+
+    # TEST ROLES:
+    - name: "Test Keycloak realm roles"
+      ansible.builtin.include_tasks: ./tasks/test_role.yml
+
+    # TEST GROUPS:
+    - name: "Test Keycloak groups"
+      ansible.builtin.include_tasks: ./tasks/test_group.yml
+
+    # TEST ClIENTS:
+    - name: "Test Keycloak clients"
+      ansible.builtin.include_tasks: ./tasks/test_client.yml

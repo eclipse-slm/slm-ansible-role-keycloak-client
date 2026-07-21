@@ -1,0 +1,23 @@
+### Inputs
+- name: "Assert inputs of 'keycloak/client | get_groups.yml'"
+  ansible.builtin.assert:
+    that:
+      - (keycloak.url.external is defined) and (keycloak.url.external|length > 0)     # Auth URL of the Keycloak instance
+      - (_keycloak_access_token is defined) and (_keycloak_access_token|length > 0)   # Access token to authenticate with Keycloak
+      - (_keycloak_realm_name is defined) and (_keycloak_realm_name|length > 0)       # Name of the Keycloak realm where the realm role should be created
+
+- name: "Get groups of realm '{{ _keycloak_realm_name }}'"
+  ansible.builtin.uri:
+    url: "{{ keycloak.url.external }}/admin/realms/{{ _keycloak_realm_name }}/groups"
+    validate_certs: false
+    method: GET
+    headers:
+      authorization: "Bearer {{ _keycloak_access_token }}"
+    body_format: json
+    status_code: 200
+  register: output_get_groups
+  changed_when: false
+
+- name: "Set fact '_keycloak_groups' with the list of groups of realm '{{ _keycloak_realm_name }}'"
+  ansible.builtin.set_fact:
+    _keycloak_groups: "{{ output_get_groups.json }}"

@@ -1,0 +1,12 @@
+---
+- name: "Apply authentication/get_admin_access_token.yml"
+  ansible.builtin.include_role:
+    name: "../../../slm-ansible-role-keycloak-client"
+    tasks_from: "authentication/get_admin_access_token.yml"
+
+- name: Assert that the Keycloak admin access token is set
+  ansible.builtin.assert:
+    that:
+      - keycloak_access_token is defined
+      - keycloak_access_token|length > 0
+    fail_msg: "Keycloak admin access token is not set."

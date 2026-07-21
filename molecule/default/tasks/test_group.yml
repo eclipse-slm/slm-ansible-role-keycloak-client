@@ -1,0 +1,22 @@
+---
+- name: "Apply groups/create_group.yml"
+  ansible.builtin.include_role:
+    name: ../../../slm-ansible-role-keycloak-client
+    tasks_from: "groups/create_group.yml"
+  vars:
+    _keycloak_realm_name: "{{ realm.name }}"
+    _keycloak_group:
+      name: "{{ realm_group.name }}"
+
+- name: "Apply groups/get_groups.yml"
+  ansible.builtin.include_role:
+    name: ../../../slm-ansible-role-keycloak-client
+    tasks_from: "groups/get_groups.yml"
+  vars:
+    _keycloak_realm_name: "{{ realm.name }}"
+
+- name: Assert that the group '{{ realm_group.name }}' exists in the list of groups of realm '{{ realm.name }}'
+  ansible.builtin.assert:
+    that:
+      - (_keycloak_groups is defined) and (_keycloak_groups | length == 1)
+      - realm_group.name in (_keycloak_groups | map(attribute='name') | list)

@@ -1,0 +1,29 @@
+---
+### Inputs
+- name: "Assert inputs of 'keycloak/client | get_client_by_client_id.yml'"
+  ansible.builtin.assert:
+    that:
+      - (keycloak.url.external is defined) and (keycloak.url.external|length > 0)       # Auth URL of the Keycloak instance
+      - (_keycloak_access_token is defined) and (_keycloak_access_token|length > 0)     # Access token to authenticate with Keycloak
+      - (_keycloak_realm_name is defined) and (_keycloak_realm_name|length > 0)         # Name of the Keycloak realm where the client should be created
+      - (_keycloak_client_id is defined) and (_keycloak_client_id|length > 0)           # Definition of the client to be created
+
+- name: "Get client by client ID '{{ _keycloak_client_id }}'"
+  ansible.builtin.uri:
+    url: "{{ keycloak.url.external }}/admin/realms/{{ _keycloak_realm_name }}/clients?clientId={{ _keycloak_client_id }}"
+    validate_certs: false
+    method: GET
+    headers:
+      authorization: "Bearer {{ _keycloak_access_token }}"
+  register: output_get_client
+
+### Outputs:
+- name: "Set fact for client with ID '{{ _keycloak_client_id }}'"
+  when: output_get_client.json | length > 0
+  ansible.builtin.set_fact:
+    keycloak_client: "{{ output_get_client.json[0] }}"
+
+- name: "Fail if client with ID '{{ _keycloak_client_id }}' not found"
+  when: output_get_client.json | length == 0
+  ansible.builtin.fail:
+    msg: "Client with ID '{{ _keycloak_client_id }}' not found"

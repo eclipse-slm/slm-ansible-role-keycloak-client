@@ -1,0 +1,9 @@
+---
+- name: Create
+  hosts: localhost
+  gather_facts: false
+  tasks:
+  - name: Include molecule_docker role
+    ansible.builtin.include_role:
+      name: molecule_docker
+      tasks_from: create

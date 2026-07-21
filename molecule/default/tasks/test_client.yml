@@ -1,0 +1,14 @@
+---
+- name: "Apply clients/create_client.yml"
+  ansible.builtin.include_role:
+    name: ../../../slm-ansible-role-keycloak-client
+    tasks_from: "clients/create_client.yml"
+  vars:
+    _keycloak_realm_name: "{{ realm.name }}"
+    _keycloak_client_store_config_consul: false
+    _keycloak_client:
+      client_id: "{{ realm_client.client_id }}"
+      public_client: "{{ realm_client.public_client }}"
+      service_accounts_enabled: "{{ realm_client.service_accounts_enabled }}"
+
+  

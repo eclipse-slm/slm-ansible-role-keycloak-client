@@ -1,0 +1,21 @@
+---
+- name: "Apply roles/create_role.yml"
+  ansible.builtin.include_role:
+    name: ../../../slm-ansible-role-keycloak-client
+    tasks_from: "roles/create_realm_role.yml"
+  vars:
+    _keycloak_realm_name: "{{ realm.name }}"
+    _keycloak_realm_role:
+      name: "{{ realm_role.name }}"
+
+- name: "Apply roles/get_realm_roles.yml"
+  ansible.builtin.include_role:
+    name: ../../../slm-ansible-role-keycloak-client
+    tasks_from: "roles/get_realm_roles.yml"
+  vars:
+    _keycloak_realm_name: "{{ realm.name }}"  
+
+- name: Assert Keycloak realm role was created
+  ansible.builtin.assert:
+    that:
+      - realm_role.name in (keycloak_realm_roles | map(attribute='name') | list)
