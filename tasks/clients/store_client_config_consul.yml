@@ -12,7 +12,7 @@
       - (_consul_token is defined) and (_consul_token|length > 0)                       # Token to authenticate with Consul
 
 - name: "Get OIDC JSON for Keycloak client '{{ client_id }}'"
-  import_tasks: clients/get_oidc-keycloak-json.yml
+  ansible.builtin.include_tasks: "{{ role_path }}/tasks/clients/get_oidc-keycloak-json.yml
 
 - name: "Store config of Keycloak client 'client_id' in Consul"
   community.general.consul_kv:
