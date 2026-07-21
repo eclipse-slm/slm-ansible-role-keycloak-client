@@ -33,6 +33,17 @@
       #   audience: true
       # assign_client_role_to_service_account: true
   tasks:
+    - name: Wait for Keycloak to be ready
+      ansible.builtin.uri:
+        url: "{{ keycloak.url.external }}/realms/master/.well-known/openid-configuration"
+        validate_certs: false
+        method: GET
+        status_code: 200
+      register: output_wait_for_keycloak
+      until: output_wait_for_keycloak.status == 200
+      retries: 30
+      delay: 10
+
     # TEST ADMIN TOKEN:
     - name: "Test Get Keycloak admin access token"
       ansible.builtin.include_tasks: ./tasks/test_admin_token.yml
