@@ -1,5 +1,5 @@
 ### Inputs
-- name: "Assert inputs of 'keycloak/client | create_realm_role.yml'"
+- name: "KEYCLOAK_CLIENT | Assert inputs | create_realm_role.yml"
   ansible.builtin.assert:
     that:
       - (keycloak.url.external is defined) and (keycloak.url.external|length > 0)             # Auth URL of the Keycloak instance
@@ -7,7 +7,7 @@
       - (_keycloak_realm_name is defined) and (_keycloak_realm_name|length > 0)       # Name of the Keycloak realm where the realm role should be created
       - (_keycloak_realm_role is defined) and (_keycloak_realm_role|length > 0)       # Definition of the realm role
 
-- name: "Create realm role '{{ _keycloak_realm_role }}'"
+- name: "KEYCLOAK_CLIENT | Create realm role '{{ _keycloak_realm_role }}'"
   ansible.builtin.uri:
     url: "{{ keycloak.url.external }}/admin/realms/{{ _keycloak_realm_name }}/roles"
     validate_certs: false

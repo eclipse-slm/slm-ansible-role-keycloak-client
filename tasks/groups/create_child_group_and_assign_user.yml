@@ -1,5 +1,5 @@
 ### Inputs
-- name: "Assert inputs of 'keycloak/client | create_child_group_and_assign_user.yml'"
+- name: "KEYCLOAK_CLIENT | Assert inputs | create_child_group_and_assign_user.yml"
   ansible.builtin.assert:
     that:
       - (keycloak.url.external is defined) and (keycloak.url.external|length > 0)             # Auth URL of the Keycloak instance
@@ -11,7 +11,7 @@
                                                                                               # - name: "child_group_name"
                                                                                               #   description: "Description of child group"
 
-- name: "Get details of top level parent group '{{ _keycloak_parent_group_name }}'"
+- name: "KEYCLOAK_CLIENT | Get details of top level parent group '{{ _keycloak_parent_group_name }}'"
   ansible.builtin.uri:
     url: "{{ keycloak.url.external }}/admin/realms/{{ ENV.KEYCLOAK.REALM }}/groups?search={{ _keycloak_parent_group_name }}"
     validate_certs: false
@@ -21,56 +21,58 @@
     status_code: 200
   register: output_get_parent_group
 
-- name: "Set fact for parent group ID"
+- name: "KEYCLOAK_CLIENT | Set fact for parent group ID"
   ansible.builtin.set_fact:
     __keycloak_users_parent_group_id: "{{ output_get_parent_group.json[0].id }}"
 
-- block:
-  - name: "Create child group '{{ _keycloak_child_group.name }}' under parent group '{{ _keycloak_parent_group_name }}'"
-    ansible.builtin.include_tasks: "{{ role_path }}/tasks/groups/create_child_group.yml"
-    vars:
-      _keycloak_access_token: "{{ keycloak_access_token }}"
-      _keycloak_realm_name: "{{ ENV.KEYCLOAK.REALM }}"
-      _keycloak_parent_group_id: "{{ __keycloak_users_parent_group_id }}"
-      _keycloak_group:
-        name: "{{ _keycloak_child_group.name }}"
-        description: "_keycloak_child_group.description'"
+- name: "KEYCLOAK_CLIENT | Create child group '{{ _keycloak_child_group.name }}' under parent group '{{ _keycloak_parent_group_name }}'"
+  block:
+    - name: "KEYCLOAK_CLIENT | Create child group '{{ _keycloak_child_group.name }}' under parent group '{{ _keycloak_parent_group_name }}'"
+      ansible.builtin.include_tasks: "{{ role_path }}/tasks/groups/create_child_group.yml"
+      vars:
+        _keycloak_access_token: "{{ keycloak_access_token }}"
+        _keycloak_realm_name: "{{ ENV.KEYCLOAK.REALM }}"
+        _keycloak_parent_group_id: "{{ __keycloak_users_parent_group_id }}"
+        _keycloak_group:
+          name: "{{ _keycloak_child_group.name }}"
+          description: "_keycloak_child_group.description'"
 
-  - name: "Get details of create child group '{{ _keycloak_child_group.name }}'"
-    ansible.builtin.uri:
-      url: "{{ keycloak.url.external }}/admin/realms/{{ ENV.KEYCLOAK.REALM }}/groups?search={{ _keycloak_child_group.name }}"
-      validate_certs: false
-      method: GET
-      headers:
-        authorization: "Bearer {{ keycloak_access_token }}"
-      status_code: 200
-    register: output_get_child_group
+    - name: "KEYCLOAK_CLIENT | Get details of create child group '{{ _keycloak_child_group.name }}'"
+      ansible.builtin.uri:
+        url: "{{ keycloak.url.external }}/admin/realms/{{ ENV.KEYCLOAK.REALM }}/groups?search={{ _keycloak_child_group.name }}"
+        validate_certs: false
+        method: GET
+        headers:
+          authorization: "Bearer {{ keycloak_access_token }}"
+        status_code: 200
+      register: output_get_child_group
 
-  - name: "Set fact for child group ID"
-    ansible.builtin.set_fact:
-      __keycloak_child_group_id: "{{ (output_get_child_group.json[0].subGroups | selectattr('name', 'equalto', _keycloak_child_group.name) | list | first).id }}"
+    - name: "KEYCLOAK_CLIENT | Set fact for child group ID"
+      ansible.builtin.set_fact:
+        __keycloak_child_group_id: "{{ (output_get_child_group.json[0].subGroups | selectattr('name', 'equalto', _keycloak_child_group.name) | list | first).id }}"
 
-- block:
-  - name: "Get details of '{{ _username }}'"
-    ansible.builtin.uri:
-      url: "{{ keycloak.url.external }}/admin/realms/{{ ENV.KEYCLOAK.REALM }}/users?username={{ _username }}"
-      validate_certs: false
-      method: GET
-      headers:
-        authorization: "Bearer {{ keycloak_access_token }}"
-      status_code: 200
-    register: output_get_user
+- name: "KEYCLOAK_CLIENT | Assign user '{{ _username }}' to child group '{{ _keycloak_child_group.name }}'"
+  block:
+    - name: "KEYCLOAK_CLIENT | Get details of '{{ _username }}'"
+      ansible.builtin.uri:
+        url: "{{ keycloak.url.external }}/admin/realms/{{ ENV.KEYCLOAK.REALM }}/users?username={{ _username }}"
+        validate_certs: false
+        method: GET
+        headers:
+          authorization: "Bearer {{ keycloak_access_token }}"
+        status_code: 200
+      register: output_get_user
 
-  - name: "Set fact for user ID"
-    ansible.builtin.set_fact:
-      __user_id: "{{ output_get_user.json[0].id }}"
+    - name: "KEYCLOAK_CLIENT | Set fact for user ID"
+      ansible.builtin.set_fact:
+        __user_id: "{{ output_get_user.json[0].id }}"
 
-  - name: "Assign user '{{ _username }}' to group '{{ _keycloak_child_group.name }}'"
-    ansible.builtin.uri:
-      url: "{{ keycloak.url.external }}/admin/realms/{{ ENV.KEYCLOAK.REALM }}/users/{{ __user_id }}/groups/{{ __keycloak_child_group_id }}"
-      validate_certs: false
-      method: PUT
-      headers:
-        authorization: "Bearer {{ keycloak_access_token }}"
-      status_code: 204
-    register: output_add_user_to_group
+    - name: "KEYCLOAK_CLIENT | Assign user '{{ _username }}' to group '{{ _keycloak_child_group.name }}'"
+      ansible.builtin.uri:
+        url: "{{ keycloak.url.external }}/admin/realms/{{ ENV.KEYCLOAK.REALM }}/users/{{ __user_id }}/groups/{{ __keycloak_child_group_id }}"
+        validate_certs: false
+        method: PUT
+        headers:
+          authorization: "Bearer {{ keycloak_access_token }}"
+        status_code: 204
+      register: output_add_user_to_group

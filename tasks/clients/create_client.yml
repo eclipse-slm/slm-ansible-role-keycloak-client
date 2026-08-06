@@ -1,5 +1,5 @@
 ### Inputs
-- name: "Assert inputs of 'keycloak/client | create_client.yml'"
+- name: "KEYCLOAK_CLIENT | Assert inputs | create_client.yml"
   ansible.builtin.assert:
     that:
       - (keycloak.url.external is defined) and (keycloak.url.external|length > 0)       # Auth URL of the Keycloak instance
@@ -7,7 +7,7 @@
       - (_keycloak_realm_name is defined) and (_keycloak_realm_name|length > 0)         # Name of the Keycloak realm where the client should be created
       - (_keycloak_client is defined) and (_keycloak_client|length > 0)                 # Definition of the client to be created
 
-- name: "Assert _keycloak_client inputs of 'keycloak/client | create_client.yml'"
+- name: "KEYCLOAK_CLIENT | Assert _keycloak_client inputs | create_client.yml"
   ansible.builtin.assert:
     that:
       - (_keycloak_client.client_id is defined) and (_keycloak_client.client_id|length > 0) # Client ID of the Keycloak client to be created
@@ -19,10 +19,10 @@
 # - _keycloak_client.protocol_mappers=...                       # Protocol mappers to be created for the Keycloak client
 # - _keycloak_client.assign_client_role_to_service_account=...  # Whether to assign a client role to the service account of the Keycloak client
 
-- name: "Get Keycloak admin access token"
+- name: "KEYCLOAK_CLIENT | Get Keycloak admin access token"
   ansible.builtin.include_tasks: "{{ role_path }}/tasks/authentication/get_admin_access_token.yml"
 
-- name: "Create Keycloak client '{{ _keycloak_client.client_id }}'"
+- name: "KEYCLOAK_CLIENT | Create Keycloak client '{{ _keycloak_client.client_id }}'"
   ansible.builtin.uri:
     url: "{{ keycloak.url.external }}/admin/realms/{{ _keycloak_realm_name }}/clients"
     validate_certs: false
@@ -47,16 +47,16 @@
   changed_when: output_create_ssp_client.status == 201
   register: output_create_ssp_client
 
-- name: "Get Keycloak client '{{ _keycloak_client.client_id }}' by client ID"
+- name: "KEYCLOAK_CLIENT | Get Keycloak client '{{ _keycloak_client.client_id }}' by client ID"
   ansible.builtin.include_tasks: "{{ role_path }}/tasks/clients/get_client_by_client_id.yml"
   vars:
     _keycloak_client_id: "{{ _keycloak_client.client_id }}"
 
-- name: "Set client UUID for '{{ _keycloak_client.client_id }}'"
+- name: "KEYCLOAK_CLIENT | Set client UUID for '{{ _keycloak_client.client_id }}'"
   ansible.builtin.set_fact:
     client_uuid: "{{ keycloak_client.id }}"
 
-- name: "Create protocol mapper 'Groups' for '{{ _keycloak_client.client_id }}'"
+- name: "KEYCLOAK_CLIENT | Create protocol mapper 'Groups' for '{{ _keycloak_client.client_id }}'"
   when: (_keycloak_client.protocol_mappers.groups is defined) and (_keycloak_client.protocol_mappers.groups)
   ansible.builtin.uri:
     url: "{{ keycloak.url.external }}/admin/realms/{{ _keycloak_realm_name }}/clients/{{ client_uuid }}/protocol-mappers/models"
@@ -79,7 +79,7 @@
   changed_when: output_create_client_protocol_mapper.status == 201
   register: output_create_client_protocol_mapper
 
-- name: "Create protocol mapper 'Audience' for '{{ _keycloak_client.client_id }}'"
+- name: "KEYCLOAK_CLIENT | Create protocol mapper 'Audience' for '{{ _keycloak_client.client_id }}'"
   when: (_keycloak_client.protocol_mappers.audience is defined) and (_keycloak_client.protocol_mappers.audience)
   ansible.builtin.uri:
     url: "{{ keycloak.url.external }}/admin/realms/{{ _keycloak_realm_name }}/clients/{{ client_uuid }}/protocol-mappers/models"
@@ -100,18 +100,18 @@
   changed_when: output_create_client_protocol_mapper.status == 201
   register: output_create_client_protocol_mapper
 
-- name: "Assign client role 'realm-admin' to service account of client '{{ _keycloak_client.client_id }}'"
+- name: "KEYCLOAK_CLIENT | Assign client role 'realm-admin' to service account of client '{{ _keycloak_client.client_id }}'"
   when: _keycloak_client.assign_client_role_to_service_account | default(false)
   ansible.builtin.include_tasks: "{{ role_path }}/tasks/roles/assign_client_role_to_service_account.yml"
   vars:
     _client_id: "realm-management"
     _client_role_name: "realm-admin"
 
-- name: "Debug output of Keycloak client '{{ _keycloak_client.client_id }}' creation"
+- name: "KEYCLOAK_CLIENT | Debug output of Keycloak client '{{ _keycloak_client.client_id }}' creation"
   ansible.builtin.debug:
     var: _keycloak_client
 
-- name: "Store config of Keycloak client '{{ _keycloak_client.client_id }}' in Consul"
+- name: "KEYCLOAK_CLIENT | Store config of Keycloak client '{{ _keycloak_client.client_id }}' in Consul"
   when: _keycloak_client_store_config_consul | default(true)
   ansible.builtin.include_tasks: "{{ role_path }}/tasks/clients/store_client_config_consul.yml"
   vars:

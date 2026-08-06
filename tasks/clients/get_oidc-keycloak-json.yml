@@ -1,5 +1,5 @@
 ### Inputs
-- name: "Assert inputs of 'keycloak/client | get_oidc-keycloak-json.yml'"
+- name: "KEYCLOAK_CLIENT | Assert inputs | get_oidc-keycloak-json.yml"
   ansible.builtin.assert:
     that:
       - (keycloak.url.external is defined) and (keycloak.url.external|length > 0)               # Auth URL of the Keycloak instance
@@ -7,7 +7,7 @@
       - (_keycloak_realm_name is defined) and (_keycloak_realm_name|length > 0)         # Name of the Keycloak realm the client belongs to
       - (client_id is defined) and (client_id|length > 0)                               # Id of the client
 
-- name: "Get Keylcoak client details of '{{ client_id }}'"
+- name: "KEYCLOAK_CLIENT | Get Keycloak client details of '{{ client_id }}'"
   ansible.builtin.uri:
     url: "{{ keycloak.url.external }}/admin/realms/{{ _keycloak_realm_name }}/clients?clientId={{ client_id }}"
     validate_certs: false
@@ -16,12 +16,13 @@
       authorization: "Bearer {{ keycloak_access_token }}"
   register: keycloak_response
 
-- ansible.builtin.set_fact:
-    keylcoak_client: "{{ keycloak_response.json | first }}"
+- name: "KEYCLOAK_CLIENT | Set fact for Keycloak client details of '{{ client_id }}'"
+  ansible.builtin.set_fact:
+    keycloak_client: "{{ keycloak_response.json | first }}"
 
-- name: "Get OIDC Keycloak JSON of '{{ client_id }}'"
+- name: "KEYCLOAK_CLIENT | Get OIDC Keycloak JSON of '{{ client_id }}'"
   ansible.builtin.uri:
-    url: "{{ keycloak.url.external }}/admin/realms/{{ _keycloak_realm_name }}/clients/{{ keylcoak_client.id }}/installation/providers/keycloak-oidc-keycloak-json"
+    url: "{{ keycloak.url.external }}/admin/realms/{{ _keycloak_realm_name }}/clients/{{ keycloak_client.id }}/installation/providers/keycloak-oidc-keycloak-json"
     validate_certs: false
     method: GET
     headers:
@@ -31,5 +32,6 @@
   register: keycloak_response
 
 ### Outputs
-- ansible.builtin.set_fact:
+- name: "KEYCLOAK_CLIENT | Set fact for OIDC Keycloak JSON of '{{ client_id }}'"
+  ansible.builtin.set_fact:
     keycloak_oidc_json: "{{ keycloak_response.content }}"

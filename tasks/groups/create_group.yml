@@ -1,5 +1,5 @@
 ### Inputs
-- name: "Assert inputs of 'keycloak/client | create_group.yml'"
+- name: "KEYCLOAK_CLIENT | Assert inputs | create_group.yml"
   ansible.builtin.assert:
     that:
       - (keycloak.url.external is defined) and (keycloak.url.external|length > 0)     # Auth URL of the Keycloak instance
@@ -7,7 +7,7 @@
       - (_keycloak_realm_name is defined) and (_keycloak_realm_name|length > 0)       # Name of the Keycloak realm where the realm role should be created
       - (_keycloak_group is defined) and (_keycloak_group|length > 0)                 # Keycloak group representation to create
 
-- name: "Create group '{{ _keycloak_group.name }}'"
+- name: "KEYCLOAK_CLIENT | Create group '{{ _keycloak_group.name }}'"
   ansible.builtin.uri:
     url: "{{ keycloak.url.external }}/admin/realms/{{ _keycloak_realm_name }}/groups"
     validate_certs: false

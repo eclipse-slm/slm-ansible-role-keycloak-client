@@ -1,12 +1,12 @@
 ### Inputs
-- name: "Assert inputs of 'keycloak/client | get_realms.yml'"
+- name: "KEYCLOAK_CLIENT | Assert inputs | get_realms.yml"
   ansible.builtin.assert:
     that:
       - (keycloak.url.external is defined) and (keycloak.url.external|length > 0)   # Auth URL of the Keycloak instance
       - (_keycloak_access_token is defined) and (_keycloak_access_token|length > 0) # Access token to authenticate with Keycloak
                                                                                     # --> https://www.keycloak.org/docs-api/22.0.1/rest-api/index.html#RealmRepresentation
 
-- name: "Get Keycloak realm"
+- name: "KEYCLOAK_CLIENT | Get Keycloak realm"
   ansible.builtin.uri:
     url: "{{ keycloak.url.external }}/admin/realms"
     method: GET
@@ -18,6 +18,6 @@
   register: output_get_realm
 
 ### Outputs
-- name: "Set Keycloak realms"
+- name: "KEYCLOAK_CLIENT | Set Keycloak realms"
   ansible.builtin.set_fact:
     keycloak_realms: "{{ output_get_realm.json }}"    # List of Keycloak realms

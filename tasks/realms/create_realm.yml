@@ -1,5 +1,5 @@
 ### Inputs
-- name: "Assert inputs of 'keycloak/client | create_realm.yml'"
+- name: "KEYCLOAK_CLIENT | Assert inputs | create_realm.yml"
   ansible.builtin.assert:
     that:
       - (keycloak.url.external is defined) and (keycloak.url.external|length > 0)           # Auth URL of the Keycloak instance
@@ -7,7 +7,7 @@
       - (_keycloak_realm is defined) and (_keycloak_realm|length > 0)               # Definition of the Keycloak realm to be created
                                                                                     # --> https://www.keycloak.org/docs-api/22.0.1/rest-api/index.html#RealmRepresentation
 
-- name: "Create Keycloak realm"
+- name: "KEYCLOAK_CLIENT | Create Keycloak realm"
   ansible.builtin.uri:
     url: "{{ keycloak.url.external }}/admin/realms"
     method: POST
