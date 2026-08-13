@@ -1,0 +1,24 @@
+---
+### Inputs
+- name: "KEYCLOAK_CLIENT | Assert inputs | get_users.yml"
+  ansible.builtin.assert:
+    that:
+      - (keycloak.url.external is defined) and (keycloak.url.external|length > 0)             # Auth URL of the Keycloak instance
+      - (_keycloak_access_token is defined) and (_keycloak_access_token|length > 0)   # Access token to authenticate with Keycloak
+      - (_keycloak_realm_name is defined) and (_keycloak_realm_name|length > 0)
+
+### Optional Inputs:
+# - _keycloak_get_users_query_string (e.g. '?username=test-user'; default: '') - Optional query parameters to filter the users list (e.g. '?username=test-user')
+
+- name: Get Users
+  ansible.builtin.uri:
+    url: "{{ keycloak.url.external }}/admin/realms/{{ _keycloak_realm_name }}/users{{ _keycloak_get_users_query_string | default('') }}"
+    validate_certs: false
+    method: GET
+    headers:
+      authorization: "Bearer {{ _keycloak_access_token }}"
+  register: get_users_response
+
+- name: "KEYCLOAK_CLIENT | Set Keycloak users"
+  ansible.builtin.set_fact:
+    keycloak_users: "{{ get_users_response.json }}"    # List of Keycloak users
