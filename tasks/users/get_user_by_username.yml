@@ -6,12 +6,12 @@
       - (keycloak.url.external is defined) and (keycloak.url.external|length > 0)             # Auth URL of the Keycloak instance
       - (_keycloak_access_token is defined) and (_keycloak_access_token|length > 0)   # Access token to authenticate with Keycloak
       - (_keycloak_realm_name is defined) and (_keycloak_realm_name|length > 0)
-      - (_keycloak_get_user_username) is defined and (_keycloak_get_user_username|length > 0)   # Username of the Keycloak user to retrieve
+      - (_keycloak_username) is defined and (_keycloak_username|length > 0)   # Username of the Keycloak user to retrieve
 
 - name: Get User by Username
   ansible.builtin.include_tasks: "{{ role_path }}/tasks/users/get_users.yml"
   vars:
-    _keycloak_get_users_query_string: "?username={{ _keycloak_get_user_username }}"
+    _keycloak_get_users_query_string: "?username={{ _keycloak_username }}"
 
 - name: "KEYCLOAK_CLIENT | Set Keycloak users"
   ansible.builtin.set_fact:
