@@ -57,7 +57,7 @@
     client_uuid: "{{ keycloak_client.id }}"
 
 - name: "KEYCLOAK_CLIENT | Create protocol mapper 'Groups' for '{{ _keycloak_client.client_id }}'"
-  when: (_keycloak_client.protocol_mappers.groups is defined) and (_keycloak_client.protocol_mappers.groups)
+  when: (_keycloak_client.protocol_mappers.groups is defined)
   ansible.builtin.uri:
     url: "{{ keycloak.url.external }}/admin/realms/{{ _keycloak_realm_name }}/clients/{{ client_uuid }}/protocol-mappers/models"
     validate_certs: false
@@ -66,21 +66,21 @@
       authorization: "Bearer {{ _keycloak_access_token }}"
     body_format: json
     body:
-      name: "Groups"
-      protocol: "openid-connect"
+      name: "{{ _keycloak_client.protocol_mappers.groups.name | default('Groups') }}"
+      protocol: "{{ _keycloak_client.protocol_mappers.groups.protocol | default('openid-connect') }}"
       protocolMapper: "oidc-group-membership-mapper"
       config:
-        full.path: true
-        id.token.claim: true
-        access.token.claim: true
+        full.path: "{{ _keycloak_client.protocol_mappers.groups.config.full_path | default(true) }}"
+        id.token.claim: "{{ _keycloak_client.protocol_mappers.groups.config.id_token_claim | default(true) }}"
+        access.token.claim: "{{ _keycloak_client.protocol_mappers.groups.config.access_token_claim | default(true) }}"
         claim.name: "groups"
-        userinfo.token.claim: true
+        userinfo.token.claim: "{{ _keycloak_client.protocol_mappers.groups.config.userinfo_token_claim | default(true) }}"
     status_code: 201, 409
   changed_when: output_create_client_protocol_mapper.status == 201
   register: output_create_client_protocol_mapper
 
 - name: "KEYCLOAK_CLIENT | Create protocol mapper 'Audience' for '{{ _keycloak_client.client_id }}'"
-  when: (_keycloak_client.protocol_mappers.audience is defined) and (_keycloak_client.protocol_mappers.audience)
+  when: (_keycloak_client.protocol_mappers.audience is defined)
   ansible.builtin.uri:
     url: "{{ keycloak.url.external }}/admin/realms/{{ _keycloak_realm_name }}/clients/{{ client_uuid }}/protocol-mappers/models"
     validate_certs: false
@@ -89,13 +89,13 @@
       authorization: "Bearer {{ _keycloak_access_token }}"
     body_format: json
     body:
-      name: "Audience"
-      protocol: "openid-connect"
+      name: "{{ _keycloak_client.protocol_mappers.audience.name | default('Audience') }}"
+      protocol: "{{ _keycloak_client.protocol_mappers.audience.protocol | default('openid-connect') }}"
       protocolMapper: "oidc-audience-mapper"
       config:
         included.client.audience: "{{ _keycloak_client.client_id }}"
-        id.token.claim: "false"
-        access.token.claim: "true"
+        id.token.claim: "{{ _keycloak_client.protocol_mappers.audience.config.id_token_claim | default(false) }}"
+        access.token.claim: "{{ _keycloak_client.protocol_mappers.audience.config.access_token_claim | default(true) }}"
     status_code: 201, 409
   changed_when: output_create_client_protocol_mapper.status == 201
   register: output_create_client_protocol_mapper
