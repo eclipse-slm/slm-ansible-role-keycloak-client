@@ -1,0 +1,40 @@
+---
+### Inputs
+- name: "KEYCLOAK_CLIENT | Assert inputs | set_group_as_default.yml"
+  ansible.builtin.assert:
+    that:
+      - (keycloak.url.external is defined) and (keycloak.url.external|length > 0)     # Auth URL of the Keycloak instance
+      - (_keycloak_access_token is defined) and (_keycloak_access_token|length > 0)   # Access token to authenticate with Keycloak
+      - (_keycloak_realm_name is defined) and (_keycloak_realm_name|length > 0)       # Name of the Keycloak realm the group belongs to
+      - (_keycloak_group_name is defined) and (_keycloak_group_name|length > 0)       # Name of the top-level Keycloak group to set as default group
+
+- name: "KEYCLOAK_CLIENT | Get group by name '{{ _keycloak_group_name }}'"
+  ansible.builtin.include_tasks: "{{ role_path }}/tasks/groups/get_group_by_name.yml"
+
+- name: "KEYCLOAK_CLIENT | Fail if not found group '{{ _keycloak_group_name }}'"
+  when: keycloak_group | length == 0
+  ansible.builtin.fail:
+    msg: "Group '{{ _keycloak_group_name }}' not found in realm '{{ _keycloak_realm_name }}'"
+
+- name: "KEYCLOAK_CLIENT | Get default groups of realm '{{ _keycloak_realm_name }}'"
+  ansible.builtin.uri:
+    url: "{{ keycloak.url.external }}/admin/realms/{{ _keycloak_realm_name }}/default-groups"
+    validate_certs: false
+    method: GET
+    headers:
+      authorization: "Bearer {{ _keycloak_access_token }}"
+    status_code: 200
+  register: output_get_default_groups
+  changed_when: false
+
+- name: "KEYCLOAK_CLIENT | Set group as default group '{{ _keycloak_group_name }}'"
+  when: keycloak_group.id not in (output_get_default_groups.json | map(attribute='id') | list)
+  ansible.builtin.uri:
+    url: "{{ keycloak.url.external }}/admin/realms/{{ _keycloak_realm_name }}/default-groups/{{ keycloak_group.id }}"
+    validate_certs: false
+    method: PUT
+    headers:
+      authorization: "Bearer {{ _keycloak_access_token }}"
+    status_code: 204
+  register: output_put_default_group
+  changed_when: output_put_default_group.status == 204

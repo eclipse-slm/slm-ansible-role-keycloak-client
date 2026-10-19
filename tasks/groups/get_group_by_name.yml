@@ -1,0 +1,27 @@
+---
+### Inputs
+- name: "KEYCLOAK_CLIENT | Assert inputs | get_group_by_name.yml"
+  ansible.builtin.assert:
+    that:
+      - (keycloak.url.external is defined) and (keycloak.url.external|length > 0)     # Auth URL of the Keycloak instance
+      - (_keycloak_access_token is defined) and (_keycloak_access_token|length > 0)   # Access token to authenticate with Keycloak
+      - (_keycloak_realm_name is defined) and (_keycloak_realm_name|length > 0)       # Name of the Keycloak realm the group belongs to
+      - (_keycloak_group_name is defined) and (_keycloak_group_name|length > 0)       # Name of the top-level Keycloak group to retrieve
+
+- name: "KEYCLOAK_CLIENT | Get group by name '{{ _keycloak_group_name }}'"
+  ansible.builtin.uri:
+    url: "{{ keycloak.url.external }}/admin/realms/{{ _keycloak_realm_name }}/groups?search={{ _keycloak_group_name | urlencode }}&exact=true"
+    validate_certs: false
+    method: GET
+    headers:
+      authorization: "Bearer {{ _keycloak_access_token }}"
+    status_code: 200
+  register: output_get_group
+  changed_when: false
+
+### Outputs
+# The search also matches subgroups (returned nested under their parent), so only keep exact top-level matches
+# keycloak_group: Keycloak group representation, or {} if not found
+- name: "KEYCLOAK_CLIENT | Set fact 'keycloak_group' for group '{{ _keycloak_group_name }}'"
+  ansible.builtin.set_fact:
+    keycloak_group: "{{ output_get_group.json | selectattr('name', 'equalto', _keycloak_group_name) | first | default({}) }}"
