@@ -10,5 +10,8 @@
       client_id: "{{ realm_client.client_id }}"
       public_client: "{{ realm_client.public_client }}"
       service_accounts_enabled: "{{ realm_client.service_accounts_enabled }}"
-
-  
+      protocol_mappers:
+        groups:
+          config:
+            full_path: false
+        audience: true
