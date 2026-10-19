@@ -10,7 +10,7 @@
 ### Optional Inputs:
 # - _keycloak_get_users_query_string (e.g. '?username=test-user'; default: '') - Optional query parameters to filter the users list (e.g. '?username=test-user')
 
-- name: Get Users
+- name: KEYCLOAK_CLIENT | Get Users
   ansible.builtin.uri:
     url: "{{ keycloak.url.external }}/admin/realms/{{ _keycloak_realm_name }}/users{{ _keycloak_get_users_query_string | default('') }}"
     validate_certs: false

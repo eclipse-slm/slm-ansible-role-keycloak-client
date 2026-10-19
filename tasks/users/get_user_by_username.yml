@@ -8,7 +8,7 @@
       - (_keycloak_realm_name is defined) and (_keycloak_realm_name|length > 0)
       - (_keycloak_username) is defined and (_keycloak_username|length > 0)   # Username of the Keycloak user to retrieve
 
-- name: Get User by Username
+- name: KEYCLOAK_CLIENT | Get User by Username
   ansible.builtin.include_tasks: "{{ role_path }}/tasks/users/get_users.yml"
   vars:
     _keycloak_get_users_query_string: "?username={{ _keycloak_username }}"
